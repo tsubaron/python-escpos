@@ -274,51 +274,19 @@ class Escpos(object):
         return outp
 
     def charcode(self, code="AUTO"):
-        """ Set Character Code Table """
-        if code.upper() == "USA":
-            self._raw(CHARCODE_PC437)
-        elif code.upper() == "JIS":
-            self._raw(CHARCODE_JIS)
-        elif code.upper() == "MULTILINGUAL":
-            self._raw(CHARCODE_PC850)
-        elif code.upper() == "PORTUGUESE":
-            self._raw(CHARCODE_PC860)
-        elif code.upper() == "CA_FRENCH":
-            self._raw(CHARCODE_PC863)
-        elif code.upper() == "NORDIC":
-            self._raw(CHARCODE_PC865)
-        elif code.upper() == "WEST_EUROPE":
-            self._raw(CHARCODE_WEU)
-        elif code.upper() == "GREEK":
-            self._raw(CHARCODE_GREEK)
-        elif code.upper() == "HEBREW":
-            self._raw(CHARCODE_HEBREW)
-        elif code.upper() == "LATVIAN":
-            self._raw(CHARCODE_PC755)
-        elif code.upper() == "WPC1252":
-            self._raw(CHARCODE_PC1252)
-        elif code.upper() == "CIRILLIC2":
-            self._raw(CHARCODE_PC866)
-        elif code.upper() == "LATIN2":
-            self._raw(CHARCODE_PC852)
-        elif code.upper() == "EURO":
-            self._raw(CHARCODE_PC858)
-        elif code.upper() == "THAI42":
-            self._raw(CHARCODE_THAI42)
-        elif code.upper() == "THAI11":
-            self._raw(CHARCODE_THAI11)
-        elif code.upper() == "THAI13":
-            self._raw(CHARCODE_THAI13)
-        elif code.upper() == "THAI14":
-            self._raw(CHARCODE_THAI14)
-        elif code.upper() == "THAI16":
-            self._raw(CHARCODE_THAI16)
-        elif code.upper() == "THAI17":
-            self._raw(CHARCODE_THAI17)
-        elif code.upper() == "THAI18":
-            self._raw(CHARCODE_THAI18)
+        """ Set Character Code Table
+
+        Sets the control sequence from ``CHARCODE`` in :py:mod:`escpos.constants` as active. It will be sent with
+        the next text sequence. If you set the variable code to ``AUTO`` it will try to automatically guess the
+        right codepage. (This is the standard behaviour.)
+
+        :param code: Name of CharCode
+        :raises: :py:exc:`~escpos.exceptions.CharCodeError`
+        """
+        if code.upper() == "AUTO":
+            self.magic.force_encoding(False)
         else:
-            raise CharCodeError()
+            self.magic.force_encoding(code)
 
     @staticmethod
     def check_barcode(bc, code):
@@ -679,7 +647,7 @@ class Escpos(object):
         self._raw(LINESPACING_FUNCS[divisor] + six.int2byte(spacing))
 
     def jpInit(self):
-        self.charcode('JIS')
+        self._raw('\x1b\x74\x01')
         self._raw(b'\x1c\x43\x01')
 
     def jpText(self, txt, dw=False, dh=False):
@@ -695,83 +663,6 @@ class Escpos(object):
         if (n != 0x00):
             self._raw(b'\x1c\x21\x00')  # Char size OFF
         self._raw(b'\x1c\x2e')    # Kanji mode OFF
-
-    def setAlign(self, align='left'):
-        if align.upper() == "CENTER":
-            self._raw(TXT_ALIGN_CT)
-        elif align.upper() == "RIGHT":
-            self._raw(TXT_ALIGN_RT)
-        elif align.upper() == "LEFT":
-            self._raw(TXT_ALIGN_LT)
-
-    def setFont(self, font='a'):
-        if font.upper() == "B":
-            self._raw(TXT_FONT_B)
-        else:  # DEFAULT FONT: A
-            self._raw(TXT_FONT_A)
-
-    def setType(self, type='normal'):
-        # Type
-        if type.upper() == "B":
-            self._raw(TXT_BOLD_ON)
-            self._raw(TXT_UNDERL_OFF)
-        elif type.upper() == "U":
-            self._raw(TXT_BOLD_OFF)
-            self._raw(TXT_UNDERL_ON)
-        elif type.upper() == "U2":
-            self._raw(TXT_BOLD_OFF)
-            self._raw(TXT_UNDERL2_ON)
-        elif type.upper() == "BU":
-            self._raw(TXT_BOLD_ON)
-            self._raw(TXT_UNDERL_ON)
-        elif type.upper() == "BU2":
-            self._raw(TXT_BOLD_ON)
-            self._raw(TXT_UNDERL2_ON)
-        elif type.upper == "NORMAL":
-            self._raw(TXT_BOLD_OFF)
-            self._raw(TXT_UNDERL_OFF)
-
-    def setWidth(self, width=1, height=1):
-        if height == 2 and width == 2:
-            self._raw(TXT_NORMAL)
-            self._raw(TXT_4SQUARE)
-        elif height == 2 and width != 2:
-            self._raw(TXT_NORMAL)
-            self._raw(TXT_2HEIGHT)
-        elif width == 2 and height != 2:
-            self._raw(TXT_NORMAL)
-            self._raw(TXT_2WIDTH)
-        else: # DEFAULT SIZE: NORMAL
-            self._raw(TXT_NORMAL)
-
-    def setDensity(self, density=9):
-        if density == 0:
-            self._raw(PD_N50)
-        elif density == 1:
-            self._raw(PD_N37)
-        elif density == 2:
-            self._raw(PD_N25)
-        elif density == 3:
-            self._raw(PD_N12)
-        elif density == 4:
-            self._raw(PD_0)
-        elif density == 5:
-            self._raw(PD_P12)
-        elif density == 6:
-            self._raw(PD_P25)
-        elif density == 7:
-            self._raw(PD_P37)
-        elif density == 8:
-            self._raw(PD_P50)
-        else:# DEFAULT: DOES NOTHING
-            pass
-
-    def setTab(self, *args):
-        msg = b'\x1b\x44'
-        for arg in args:
-            msg += arg.to_bytes(1, byteorder='big')
-        msg += b'\x00'
-        self._raw(msg)
 
     def cut(self, mode='FULL', feed=True):
         """ Cut paper.
