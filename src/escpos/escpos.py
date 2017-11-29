@@ -647,7 +647,7 @@ class Escpos(object):
         self._raw(LINESPACING_FUNCS[divisor] + six.int2byte(spacing))
 
     def jpInit(self):
-        self._raw('\x1b\x74\x01')
+        self._raw(b'\x1b\x74\x01')
         self._raw(b'\x1c\x43\x01')
 
     def jpText(self, txt, dw=False, dh=False):
